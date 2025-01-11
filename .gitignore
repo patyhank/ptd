@@ -5,3 +5,4 @@ config.yml
 *.exe
 data.db
 CodePageMapping.txt
+/app/ptd/ptd
