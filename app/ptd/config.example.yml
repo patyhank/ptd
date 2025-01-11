@@ -1,0 +1,38 @@
+discord: # Discord的設定
+  token: "" # Bot Token
+ptt: # PTT的設定
+  connection:
+    username: user # 登入的使用者名稱
+    password: pass # 登入的使用者密碼
+    host: wss://ws.ptt.cc/bbs # PTT的連線位置
+    host_origin: https://term.ptt.cc # PTT的連線來源(連PTT不用動)，亂改伺服器會拒絕連線
+searches: # 搜尋與追蹤的設定
+  - name: "Hololive"
+    board: "c_chat" # PTT的看板名稱
+    search_variant: # 搜尋的關鍵字範本，一行一個，避免PTT伺服器快取搜尋結果導致找不到新的
+      - "/|holo|\r|/|直播|\r"
+      - "/|holo|\r|/|間直播|\r"
+      - "/|holo|\r|/|直播單|\r"
+    title_search_variant: # 使用搜尋關鍵字時用的搜尋範本，建議搜尋兩個以內，否則有可能無法搜尋指定的關鍵字
+      - "|/holo|\r|/|直播|\r"
+      - "|/holo|\r|/|間直播|\r"
+      - "|/holo|\r|/|直播單|\r"
+    prefill_size: 12
+    post_match_regex: "\[\S+?] \[Vtub] {1,2}Hololive ([晚日])間直播單(?:（| \()(\d+)(?:）|\))" # 想要的文章標題關鍵字，使用正規表達式，除額外於Discord指定外，僅會配對到最後一個
+    post_title: "%[3]s-%[2]s間直播串" # 標題的格式範本，參數使用上方正則表達式提供的，%[2]s為日期，%[3]s為時間
+    # 追蹤同一文章的秒數，縮短會加快搜尋下一個關鍵字範本的時間，但有可能會增加PTT伺服器的負擔
+    tracking_seconds: 600
+    # 以下兩個選項請擇一設定
+    forum_channel: 276337222196658178 # 要發送到的Discord論壇頻道ID
+    channel: 276337222196658178 # 要發送到的Discord頻道ID
+    # 以上兩個選項請擇一設定
+    emoji: # 表情符號的設定，用於訊息前方，沒設定的話會用文字代替
+      up_vote: # 推的表情符號
+        id: 1033734367937310720
+        name: push
+      down_vote: # 噓的表情符號
+        id: 1033734366330892428
+        name: boo
+      reply: # 回應(→)的表情符號
+        id: 1033734364950953994
+        name: addon

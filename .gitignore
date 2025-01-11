@@ -1,1 +1,6 @@
 test
+config.yaml
+config.yml
+
+*.exe
+data.db
