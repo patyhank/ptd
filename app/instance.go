@@ -278,9 +278,11 @@ func (i *Instance) mainScreen(c *core.EventClient, e *event.MainScreenEvent) {
 
 func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 	if i.viewState != ViewStateReadyViewing {
-		log.Warn("Current view state is not ready viewing, skipping ", i.viewState.String())
-		time.Sleep(time.Second)
-		i.SendRefresh()
+		if i.viewState != ViewStateViewing {
+			log.Warn("Current view state is not ready viewing, skipping ", i.viewState.String())
+			time.Sleep(time.Second)
+			i.SendRefresh()
+		}
 		return
 	}
 	if len(e.Posts) == 0 {
@@ -299,7 +301,6 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 	var posts []event.PostInfo
 
 	for _, post := range e.Posts {
-		fmt.Println(post.Title)
 		if !regex.MatchString(post.Title) {
 			continue
 		}
@@ -315,7 +316,8 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 	lastPost := lo.LastOrEmpty(posts)
 	var forceView bool
 	if customView != nil {
-		if customView.Aid == "" && customView.Title != "" {
+		forceView = true
+		if customView.Aid == "" && customView.SearchKeywords != nil {
 			for _, post := range posts {
 				match := regex.FindStringSubmatch(post.Title)
 				if match != nil {
@@ -323,20 +325,28 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 					if postTitle == customView.Title {
 						lastPost = post
 						forceView = true
-						customView.Update().ClearForceViewExpire().Exec(ctx)
+
+						_, err := customView.Update().ClearForceViewExpire().Save(ctx)
+
+						if err != nil {
+							log.Warn(err)
+						}
 
 						break
 					}
 				}
 			}
 		}
-		if customView.Aid != "" && customView.Title == "" {
+		if customView.Aid != "" {
 			for _, post := range posts {
 				if post.Cursor {
 					lastPost = post
-					forceView = true
 
-					customView.Update().ClearForceViewExpire().Exec(ctx)
+					err := customView.Update().ClearForceViewExpire().Exec(ctx)
+
+					if err != nil {
+						log.Warn(err)
+					}
 					break
 				}
 			}
@@ -354,7 +364,6 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 			log.Errorf("error backing: %v", err)
 		}
 	}
-
 	i.Lock()
 	i.viewState = ViewStateViewing
 	i.Unlock()
@@ -492,6 +501,9 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 		i.SendRefresh()
 		c.Wait(ctx)
 		i.CheckAndSendMessages()
+		if strings.Contains(i.String(), "頁 (100%)") {
+			break
+		}
 	}
 
 	i.CheckAndSendMessages()
@@ -695,6 +707,7 @@ func (i *Instance) CheckAndSendMessages() {
 }
 
 func (i *Instance) Backing(ctx context.Context) error {
+	log.Infof("Backing %s", i.viewState.String())
 	for !strings.Contains(i.String(), "[呼叫器]") && i.viewState == ViewStateBacking {
 		i.SendMessage("\x1B[D")
 		i.PrepareWait("backing")
