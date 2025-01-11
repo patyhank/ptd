@@ -157,6 +157,16 @@ func TitleHasSuffix(v string) predicate.PostInfo {
 	return predicate.PostInfo(sql.FieldHasSuffix(FieldTitle, v))
 }
 
+// TitleIsNil applies the IsNil predicate on the "title" field.
+func TitleIsNil() predicate.PostInfo {
+	return predicate.PostInfo(sql.FieldIsNull(FieldTitle))
+}
+
+// TitleNotNil applies the NotNil predicate on the "title" field.
+func TitleNotNil() predicate.PostInfo {
+	return predicate.PostInfo(sql.FieldNotNull(FieldTitle))
+}
+
 // TitleEqualFold applies the EqualFold predicate on the "title" field.
 func TitleEqualFold(v string) predicate.PostInfo {
 	return predicate.PostInfo(sql.FieldEqualFold(FieldTitle, v))
@@ -215,6 +225,16 @@ func CurrentViewingEQ(v bool) predicate.PostInfo {
 // CurrentViewingNEQ applies the NEQ predicate on the "current_viewing" field.
 func CurrentViewingNEQ(v bool) predicate.PostInfo {
 	return predicate.PostInfo(sql.FieldNEQ(FieldCurrentViewing, v))
+}
+
+// SearchKeywordsIsNil applies the IsNil predicate on the "search_keywords" field.
+func SearchKeywordsIsNil() predicate.PostInfo {
+	return predicate.PostInfo(sql.FieldIsNull(FieldSearchKeywords))
+}
+
+// SearchKeywordsNotNil applies the NotNil predicate on the "search_keywords" field.
+func SearchKeywordsNotNil() predicate.PostInfo {
+	return predicate.PostInfo(sql.FieldNotNull(FieldSearchKeywords))
 }
 
 // ForceViewExpireEQ applies the EQ predicate on the "force_view_expire" field.

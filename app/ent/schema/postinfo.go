@@ -16,7 +16,7 @@ type PostInfo struct {
 // Fields of the PostInfo.
 func (PostInfo) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("title").Unique(),
+		field.String("title").Optional().Unique(),
 		field.Time("last_updated").Default(time.Now),
 		field.Bool("current_viewing").Default(true),
 		field.Strings("search_keywords").Optional(),

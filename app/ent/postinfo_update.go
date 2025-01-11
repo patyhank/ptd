@@ -45,6 +45,12 @@ func (piu *PostInfoUpdate) SetNillableTitle(s *string) *PostInfoUpdate {
 	return piu
 }
 
+// ClearTitle clears the value of the "title" field.
+func (piu *PostInfoUpdate) ClearTitle() *PostInfoUpdate {
+	piu.mutation.ClearTitle()
+	return piu
+}
+
 // SetLastUpdated sets the "last_updated" field.
 func (piu *PostInfoUpdate) SetLastUpdated(t time.Time) *PostInfoUpdate {
 	piu.mutation.SetLastUpdated(t)
@@ -70,6 +76,24 @@ func (piu *PostInfoUpdate) SetNillableCurrentViewing(b *bool) *PostInfoUpdate {
 	if b != nil {
 		piu.SetCurrentViewing(*b)
 	}
+	return piu
+}
+
+// SetSearchKeywords sets the "search_keywords" field.
+func (piu *PostInfoUpdate) SetSearchKeywords(s []string) *PostInfoUpdate {
+	piu.mutation.SetSearchKeywords(s)
+	return piu
+}
+
+// AppendSearchKeywords appends s to the "search_keywords" field.
+func (piu *PostInfoUpdate) AppendSearchKeywords(s []string) *PostInfoUpdate {
+	piu.mutation.AppendSearchKeywords(s)
+	return piu
+}
+
+// ClearSearchKeywords clears the value of the "search_keywords" field.
+func (piu *PostInfoUpdate) ClearSearchKeywords() *PostInfoUpdate {
+	piu.mutation.ClearSearchKeywords()
 	return piu
 }
 
@@ -299,11 +323,25 @@ func (piu *PostInfoUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := piu.mutation.Title(); ok {
 		_spec.SetField(postinfo.FieldTitle, field.TypeString, value)
 	}
+	if piu.mutation.TitleCleared() {
+		_spec.ClearField(postinfo.FieldTitle, field.TypeString)
+	}
 	if value, ok := piu.mutation.LastUpdated(); ok {
 		_spec.SetField(postinfo.FieldLastUpdated, field.TypeTime, value)
 	}
 	if value, ok := piu.mutation.CurrentViewing(); ok {
 		_spec.SetField(postinfo.FieldCurrentViewing, field.TypeBool, value)
+	}
+	if value, ok := piu.mutation.SearchKeywords(); ok {
+		_spec.SetField(postinfo.FieldSearchKeywords, field.TypeJSON, value)
+	}
+	if value, ok := piu.mutation.AppendedSearchKeywords(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, postinfo.FieldSearchKeywords, value)
+		})
+	}
+	if piu.mutation.SearchKeywordsCleared() {
+		_spec.ClearField(postinfo.FieldSearchKeywords, field.TypeJSON)
 	}
 	if value, ok := piu.mutation.ForceViewExpire(); ok {
 		_spec.SetField(postinfo.FieldForceViewExpire, field.TypeTime, value)
@@ -428,6 +466,12 @@ func (piuo *PostInfoUpdateOne) SetNillableTitle(s *string) *PostInfoUpdateOne {
 	return piuo
 }
 
+// ClearTitle clears the value of the "title" field.
+func (piuo *PostInfoUpdateOne) ClearTitle() *PostInfoUpdateOne {
+	piuo.mutation.ClearTitle()
+	return piuo
+}
+
 // SetLastUpdated sets the "last_updated" field.
 func (piuo *PostInfoUpdateOne) SetLastUpdated(t time.Time) *PostInfoUpdateOne {
 	piuo.mutation.SetLastUpdated(t)
@@ -453,6 +497,24 @@ func (piuo *PostInfoUpdateOne) SetNillableCurrentViewing(b *bool) *PostInfoUpdat
 	if b != nil {
 		piuo.SetCurrentViewing(*b)
 	}
+	return piuo
+}
+
+// SetSearchKeywords sets the "search_keywords" field.
+func (piuo *PostInfoUpdateOne) SetSearchKeywords(s []string) *PostInfoUpdateOne {
+	piuo.mutation.SetSearchKeywords(s)
+	return piuo
+}
+
+// AppendSearchKeywords appends s to the "search_keywords" field.
+func (piuo *PostInfoUpdateOne) AppendSearchKeywords(s []string) *PostInfoUpdateOne {
+	piuo.mutation.AppendSearchKeywords(s)
+	return piuo
+}
+
+// ClearSearchKeywords clears the value of the "search_keywords" field.
+func (piuo *PostInfoUpdateOne) ClearSearchKeywords() *PostInfoUpdateOne {
+	piuo.mutation.ClearSearchKeywords()
 	return piuo
 }
 
@@ -712,11 +774,25 @@ func (piuo *PostInfoUpdateOne) sqlSave(ctx context.Context) (_node *PostInfo, er
 	if value, ok := piuo.mutation.Title(); ok {
 		_spec.SetField(postinfo.FieldTitle, field.TypeString, value)
 	}
+	if piuo.mutation.TitleCleared() {
+		_spec.ClearField(postinfo.FieldTitle, field.TypeString)
+	}
 	if value, ok := piuo.mutation.LastUpdated(); ok {
 		_spec.SetField(postinfo.FieldLastUpdated, field.TypeTime, value)
 	}
 	if value, ok := piuo.mutation.CurrentViewing(); ok {
 		_spec.SetField(postinfo.FieldCurrentViewing, field.TypeBool, value)
+	}
+	if value, ok := piuo.mutation.SearchKeywords(); ok {
+		_spec.SetField(postinfo.FieldSearchKeywords, field.TypeJSON, value)
+	}
+	if value, ok := piuo.mutation.AppendedSearchKeywords(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, postinfo.FieldSearchKeywords, value)
+		})
+	}
+	if piuo.mutation.SearchKeywordsCleared() {
+		_spec.ClearField(postinfo.FieldSearchKeywords, field.TypeJSON)
 	}
 	if value, ok := piuo.mutation.ForceViewExpire(); ok {
 		_spec.SetField(postinfo.FieldForceViewExpire, field.TypeTime, value)

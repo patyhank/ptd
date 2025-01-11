@@ -54,9 +54,10 @@ var (
 	// PostInfosColumns holds the columns for the "post_infos" table.
 	PostInfosColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "title", Type: field.TypeString, Unique: true},
+		{Name: "title", Type: field.TypeString, Unique: true, Nullable: true},
 		{Name: "last_updated", Type: field.TypeTime},
 		{Name: "current_viewing", Type: field.TypeBool, Default: true},
+		{Name: "search_keywords", Type: field.TypeJSON, Nullable: true},
 		{Name: "force_view_expire", Type: field.TypeTime, Nullable: true},
 		{Name: "should_archived", Type: field.TypeBool, Default: false},
 		{Name: "aid", Type: field.TypeString, Nullable: true},

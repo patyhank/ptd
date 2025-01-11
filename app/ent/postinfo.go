@@ -25,6 +25,8 @@ type PostInfo struct {
 	LastUpdated time.Time `json:"last_updated,omitempty"`
 	// CurrentViewing holds the value of the "current_viewing" field.
 	CurrentViewing bool `json:"current_viewing,omitempty"`
+	// SearchKeywords holds the value of the "search_keywords" field.
+	SearchKeywords []string `json:"search_keywords,omitempty"`
 	// ForceViewExpire holds the value of the "force_view_expire" field.
 	ForceViewExpire time.Time `json:"force_view_expire,omitempty"`
 	// ShouldArchived holds the value of the "should_archived" field.
@@ -68,7 +70,7 @@ func (*PostInfo) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case postinfo.FieldContentMessages:
+		case postinfo.FieldSearchKeywords, postinfo.FieldContentMessages:
 			values[i] = new([]byte)
 		case postinfo.FieldCurrentViewing, postinfo.FieldShouldArchived:
 			values[i] = new(sql.NullBool)
@@ -116,6 +118,14 @@ func (pi *PostInfo) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field current_viewing", values[i])
 			} else if value.Valid {
 				pi.CurrentViewing = value.Bool
+			}
+		case postinfo.FieldSearchKeywords:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field search_keywords", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &pi.SearchKeywords); err != nil {
+					return fmt.Errorf("unmarshal field search_keywords: %w", err)
+				}
 			}
 		case postinfo.FieldForceViewExpire:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -210,6 +220,9 @@ func (pi *PostInfo) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("current_viewing=")
 	builder.WriteString(fmt.Sprintf("%v", pi.CurrentViewing))
+	builder.WriteString(", ")
+	builder.WriteString("search_keywords=")
+	builder.WriteString(fmt.Sprintf("%v", pi.SearchKeywords))
 	builder.WriteString(", ")
 	builder.WriteString("force_view_expire=")
 	builder.WriteString(pi.ForceViewExpire.Format(time.ANSIC))

@@ -9,7 +9,6 @@ import (
 	"github.com/patyhank/ptd/uao"
 	log "github.com/sirupsen/logrus"
 	"net/http"
-	"os"
 	"slices"
 	"time"
 )
@@ -121,7 +120,7 @@ func (c *Client) Connect(ctx context.Context) {
 			screen := c.String()
 			c.callScreenMatch(screen)
 
-			os.WriteFile("screen.txt", []byte(screen), 0644)
+			//os.WriteFile("screen.txt", []byte(screen), 0644) // Debugging
 
 			c.NotifyUpdated(screen)
 		}

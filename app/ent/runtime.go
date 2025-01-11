@@ -41,11 +41,11 @@ func init() {
 	// postinfo.DefaultCurrentViewing holds the default value on creation for the current_viewing field.
 	postinfo.DefaultCurrentViewing = postinfoDescCurrentViewing.Default.(bool)
 	// postinfoDescShouldArchived is the schema descriptor for should_archived field.
-	postinfoDescShouldArchived := postinfoFields[4].Descriptor()
+	postinfoDescShouldArchived := postinfoFields[5].Descriptor()
 	// postinfo.DefaultShouldArchived holds the default value on creation for the should_archived field.
 	postinfo.DefaultShouldArchived = postinfoDescShouldArchived.Default.(bool)
 	// postinfoDescChannelID is the schema descriptor for channel_id field.
-	postinfoDescChannelID := postinfoFields[9].Descriptor()
+	postinfoDescChannelID := postinfoFields[10].Descriptor()
 	// postinfo.DefaultChannelID holds the default value on creation for the channel_id field.
 	postinfo.DefaultChannelID = snowflake.ID(postinfoDescChannelID.Default.(uint64))
 	// postinfo.ChannelIDValidator is a validator for the "channel_id" field. It is called by the builders before save.

@@ -16,7 +16,7 @@ const (
 )
 
 func (v ViewState) String() string {
-	return [...]string{"Backing", "Searching", "ReadyViewing", "Viewing"}[v]
+	return [...]string{"Init", "Backing", "Searching", "ReadyViewing", "Viewing"}[v]
 }
 
 var commands = []discord.ApplicationCommandCreate{
@@ -45,13 +45,18 @@ var commands = []discord.ApplicationCommandCreate{
 		},
 		Description: "fetch post for title",
 		DescriptionLocalizations: map[discord.Locale]string{
-			discord.LocaleChineseTW: "使用格式 a|b 來搜尋文章關鍵詞a及b",
+			discord.LocaleChineseTW: "",
 		},
 		Options: []discord.ApplicationCommandOption{
 			&discord.ApplicationCommandOptionString{
-				Name:        "title",
-				Description: "post title",
+				Name:        "search",
+				Description: "使用格式 a|b 來搜尋文章關鍵詞a及b",
 				Required:    true,
+			},
+			&discord.ApplicationCommandOptionString{
+				Name:        "title-constraint",
+				Description: "標題限制",
+				Required:    false,
 			},
 		},
 		DefaultMemberPermissions: json.NewNullablePtr(discord.PermissionAdministrator),

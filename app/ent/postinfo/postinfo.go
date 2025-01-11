@@ -21,6 +21,8 @@ const (
 	FieldLastUpdated = "last_updated"
 	// FieldCurrentViewing holds the string denoting the current_viewing field in the database.
 	FieldCurrentViewing = "current_viewing"
+	// FieldSearchKeywords holds the string denoting the search_keywords field in the database.
+	FieldSearchKeywords = "search_keywords"
 	// FieldForceViewExpire holds the string denoting the force_view_expire field in the database.
 	FieldForceViewExpire = "force_view_expire"
 	// FieldShouldArchived holds the string denoting the should_archived field in the database.
@@ -54,6 +56,7 @@ var Columns = []string{
 	FieldTitle,
 	FieldLastUpdated,
 	FieldCurrentViewing,
+	FieldSearchKeywords,
 	FieldForceViewExpire,
 	FieldShouldArchived,
 	FieldAid,

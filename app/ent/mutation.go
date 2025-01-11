@@ -1218,6 +1218,8 @@ type PostInfoMutation struct {
 	title                  *string
 	last_updated           *time.Time
 	current_viewing        *bool
+	search_keywords        *[]string
+	appendsearch_keywords  []string
 	force_view_expire      *time.Time
 	should_archived        *bool
 	aid                    *string
@@ -1365,9 +1367,22 @@ func (m *PostInfoMutation) OldTitle(ctx context.Context) (v string, err error) {
 	return oldValue.Title, nil
 }
 
+// ClearTitle clears the value of the "title" field.
+func (m *PostInfoMutation) ClearTitle() {
+	m.title = nil
+	m.clearedFields[postinfo.FieldTitle] = struct{}{}
+}
+
+// TitleCleared returns if the "title" field was cleared in this mutation.
+func (m *PostInfoMutation) TitleCleared() bool {
+	_, ok := m.clearedFields[postinfo.FieldTitle]
+	return ok
+}
+
 // ResetTitle resets all changes to the "title" field.
 func (m *PostInfoMutation) ResetTitle() {
 	m.title = nil
+	delete(m.clearedFields, postinfo.FieldTitle)
 }
 
 // SetLastUpdated sets the "last_updated" field.
@@ -1440,6 +1455,71 @@ func (m *PostInfoMutation) OldCurrentViewing(ctx context.Context) (v bool, err e
 // ResetCurrentViewing resets all changes to the "current_viewing" field.
 func (m *PostInfoMutation) ResetCurrentViewing() {
 	m.current_viewing = nil
+}
+
+// SetSearchKeywords sets the "search_keywords" field.
+func (m *PostInfoMutation) SetSearchKeywords(s []string) {
+	m.search_keywords = &s
+	m.appendsearch_keywords = nil
+}
+
+// SearchKeywords returns the value of the "search_keywords" field in the mutation.
+func (m *PostInfoMutation) SearchKeywords() (r []string, exists bool) {
+	v := m.search_keywords
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSearchKeywords returns the old "search_keywords" field's value of the PostInfo entity.
+// If the PostInfo object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PostInfoMutation) OldSearchKeywords(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSearchKeywords is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSearchKeywords requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSearchKeywords: %w", err)
+	}
+	return oldValue.SearchKeywords, nil
+}
+
+// AppendSearchKeywords adds s to the "search_keywords" field.
+func (m *PostInfoMutation) AppendSearchKeywords(s []string) {
+	m.appendsearch_keywords = append(m.appendsearch_keywords, s...)
+}
+
+// AppendedSearchKeywords returns the list of values that were appended to the "search_keywords" field in this mutation.
+func (m *PostInfoMutation) AppendedSearchKeywords() ([]string, bool) {
+	if len(m.appendsearch_keywords) == 0 {
+		return nil, false
+	}
+	return m.appendsearch_keywords, true
+}
+
+// ClearSearchKeywords clears the value of the "search_keywords" field.
+func (m *PostInfoMutation) ClearSearchKeywords() {
+	m.search_keywords = nil
+	m.appendsearch_keywords = nil
+	m.clearedFields[postinfo.FieldSearchKeywords] = struct{}{}
+}
+
+// SearchKeywordsCleared returns if the "search_keywords" field was cleared in this mutation.
+func (m *PostInfoMutation) SearchKeywordsCleared() bool {
+	_, ok := m.clearedFields[postinfo.FieldSearchKeywords]
+	return ok
+}
+
+// ResetSearchKeywords resets all changes to the "search_keywords" field.
+func (m *PostInfoMutation) ResetSearchKeywords() {
+	m.search_keywords = nil
+	m.appendsearch_keywords = nil
+	delete(m.clearedFields, postinfo.FieldSearchKeywords)
 }
 
 // SetForceViewExpire sets the "force_view_expire" field.
@@ -1883,7 +1963,7 @@ func (m *PostInfoMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PostInfoMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.title != nil {
 		fields = append(fields, postinfo.FieldTitle)
 	}
@@ -1892,6 +1972,9 @@ func (m *PostInfoMutation) Fields() []string {
 	}
 	if m.current_viewing != nil {
 		fields = append(fields, postinfo.FieldCurrentViewing)
+	}
+	if m.search_keywords != nil {
+		fields = append(fields, postinfo.FieldSearchKeywords)
 	}
 	if m.force_view_expire != nil {
 		fields = append(fields, postinfo.FieldForceViewExpire)
@@ -1928,6 +2011,8 @@ func (m *PostInfoMutation) Field(name string) (ent.Value, bool) {
 		return m.LastUpdated()
 	case postinfo.FieldCurrentViewing:
 		return m.CurrentViewing()
+	case postinfo.FieldSearchKeywords:
+		return m.SearchKeywords()
 	case postinfo.FieldForceViewExpire:
 		return m.ForceViewExpire()
 	case postinfo.FieldShouldArchived:
@@ -1957,6 +2042,8 @@ func (m *PostInfoMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldLastUpdated(ctx)
 	case postinfo.FieldCurrentViewing:
 		return m.OldCurrentViewing(ctx)
+	case postinfo.FieldSearchKeywords:
+		return m.OldSearchKeywords(ctx)
 	case postinfo.FieldForceViewExpire:
 		return m.OldForceViewExpire(ctx)
 	case postinfo.FieldShouldArchived:
@@ -2000,6 +2087,13 @@ func (m *PostInfoMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCurrentViewing(v)
+		return nil
+	case postinfo.FieldSearchKeywords:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSearchKeywords(v)
 		return nil
 	case postinfo.FieldForceViewExpire:
 		v, ok := value.(time.Time)
@@ -2095,6 +2189,12 @@ func (m *PostInfoMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *PostInfoMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(postinfo.FieldTitle) {
+		fields = append(fields, postinfo.FieldTitle)
+	}
+	if m.FieldCleared(postinfo.FieldSearchKeywords) {
+		fields = append(fields, postinfo.FieldSearchKeywords)
+	}
 	if m.FieldCleared(postinfo.FieldForceViewExpire) {
 		fields = append(fields, postinfo.FieldForceViewExpire)
 	}
@@ -2124,6 +2224,12 @@ func (m *PostInfoMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *PostInfoMutation) ClearField(name string) error {
 	switch name {
+	case postinfo.FieldTitle:
+		m.ClearTitle()
+		return nil
+	case postinfo.FieldSearchKeywords:
+		m.ClearSearchKeywords()
+		return nil
 	case postinfo.FieldForceViewExpire:
 		m.ClearForceViewExpire()
 		return nil
@@ -2155,6 +2261,9 @@ func (m *PostInfoMutation) ResetField(name string) error {
 		return nil
 	case postinfo.FieldCurrentViewing:
 		m.ResetCurrentViewing()
+		return nil
+	case postinfo.FieldSearchKeywords:
+		m.ResetSearchKeywords()
 		return nil
 	case postinfo.FieldForceViewExpire:
 		m.ResetForceViewExpire()

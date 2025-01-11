@@ -28,6 +28,14 @@ func (pic *PostInfoCreate) SetTitle(s string) *PostInfoCreate {
 	return pic
 }
 
+// SetNillableTitle sets the "title" field if the given value is not nil.
+func (pic *PostInfoCreate) SetNillableTitle(s *string) *PostInfoCreate {
+	if s != nil {
+		pic.SetTitle(*s)
+	}
+	return pic
+}
+
 // SetLastUpdated sets the "last_updated" field.
 func (pic *PostInfoCreate) SetLastUpdated(t time.Time) *PostInfoCreate {
 	pic.mutation.SetLastUpdated(t)
@@ -53,6 +61,12 @@ func (pic *PostInfoCreate) SetNillableCurrentViewing(b *bool) *PostInfoCreate {
 	if b != nil {
 		pic.SetCurrentViewing(*b)
 	}
+	return pic
+}
+
+// SetSearchKeywords sets the "search_keywords" field.
+func (pic *PostInfoCreate) SetSearchKeywords(s []string) *PostInfoCreate {
+	pic.mutation.SetSearchKeywords(s)
 	return pic
 }
 
@@ -216,9 +230,6 @@ func (pic *PostInfoCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (pic *PostInfoCreate) check() error {
-	if _, ok := pic.mutation.Title(); !ok {
-		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "PostInfo.title"`)}
-	}
 	if _, ok := pic.mutation.LastUpdated(); !ok {
 		return &ValidationError{Name: "last_updated", err: errors.New(`ent: missing required field "PostInfo.last_updated"`)}
 	}
@@ -273,6 +284,10 @@ func (pic *PostInfoCreate) createSpec() (*PostInfo, *sqlgraph.CreateSpec) {
 	if value, ok := pic.mutation.CurrentViewing(); ok {
 		_spec.SetField(postinfo.FieldCurrentViewing, field.TypeBool, value)
 		_node.CurrentViewing = value
+	}
+	if value, ok := pic.mutation.SearchKeywords(); ok {
+		_spec.SetField(postinfo.FieldSearchKeywords, field.TypeJSON, value)
+		_node.SearchKeywords = value
 	}
 	if value, ok := pic.mutation.ForceViewExpire(); ok {
 		_spec.SetField(postinfo.FieldForceViewExpire, field.TypeTime, value)

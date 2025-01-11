@@ -9,7 +9,7 @@ import (
 const LiveUpdateCommand = "\x1B[D\x1B[C\x1B[4~"
 
 // PostRegex [Message Cursor ID Status PushCount]
-var PostRegex = regexp.MustCompile("([> ])(\\d+) ([+Mm -!]) ?(X?\\d+|[爆 ]) ?(\\d{1,2})/ ?(\\d{1,2}) (\\w+)\\s+([\\S\\s]*?)\\s+\\n")
+var PostRegex = regexp.MustCompile("([> ])(\\d+) ([ ~+Mm -!]) ?(X?\\d+|[爆 ]) ?(\\d{1,2})/ ?(\\d{1,2}) (\\w+)\\s+([\\S\\s]*?)\\s+\\n")
 
 var CommentRegex = regexp.MustCompile("([→推噓])  ?(\\w+): ([\\s\\S]+?)(?: +?| {0})(?:\\S+\\n|(\\d+/\\d+ \\d+:\\d+))")
 

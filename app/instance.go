@@ -203,7 +203,7 @@ func (i *Instance) mainScreen(c *core.EventClient, e *event.MainScreenEvent) {
 
 	i.Lock()
 	if i.viewState > ViewStateBacking {
-		log.Infof("Current view state is %v, skipping", i.viewState)
+		log.Infof("Current view state is %v, skipping searching, ", i.viewState)
 		i.Unlock()
 		return
 	}
@@ -215,24 +215,31 @@ func (i *Instance) mainScreen(c *core.EventClient, e *event.MainScreenEvent) {
 
 	ctx, cancelFunc := context.WithTimeout(context.Background(), time.Minute)
 	defer cancelFunc()
-	defer i.Unlock()
+	defer func() {
+		log.Infof("Change state to ready viewing")
+		i.viewState = ViewStateReadyViewing
+		i.Unlock()
+		go func() {
+			i.SendRefresh()
+			i.SendRefresh()
+		}()
+	}()
 
 	c.PrepareWait()
 	i.SendMultipleMessage([]string{"s", i.currentSearch.Board})
 	c.Wait(ctx)
 	i.SendReturn()
 	time.Sleep(time.Second)
-
-	customAID, _ := i.db.PostInfo.Query().Where(postinfo.ForceViewExpireGTE(time.Now())).First(ctx)
-	if customAID != nil {
-		if customAID.Aid != "" {
+	customView, _ := i.db.PostInfo.Query().Where(postinfo.ForceViewExpireGTE(time.Now())).First(ctx)
+	if customView != nil {
+		if customView.Aid != "" {
 			i.SendMessage("#")
-			i.SendMessage(customAID.Aid, true)
+			i.SendMessage(customView.Aid, true)
+			i.viewState = ViewStateReadyViewing
+
 			c.PrepareWait()
 			i.SendRefresh()
-			c.Wait(ctx)
-			i.viewState = ViewStateReadyViewing
-			log.Infof("Change state to ready viewing, Current viewing custom AID: %s", customAID.Aid)
+			log.Infof("Change state to ready viewing, Current viewing custom AID: %s", customView.Aid)
 			return
 		}
 
@@ -243,7 +250,16 @@ func (i *Instance) mainScreen(c *core.EventClient, e *event.MainScreenEvent) {
 		pattern := i.currentSearch.TitleSearchVariant[i.currentTitleVariantIndex]
 		i.SendMultipleMessage(pattern.Keys())
 
+		for _, keyword := range customView.SearchKeywords {
+			i.SendMessage("/")
+			i.SendMessage(keyword, true)
+		}
+		i.viewState = ViewStateReadyViewing
+
 		i.currentTitleVariantIndex++
+
+		log.Infof("Change state to ready viewing, Current viewing custom AID: %s", customView.Aid)
+		return
 	}
 
 	if i.currentVariantIndex >= len(i.currentSearch.SearchVariant) {
@@ -256,23 +272,22 @@ func (i *Instance) mainScreen(c *core.EventClient, e *event.MainScreenEvent) {
 
 	i.SendMessage("\x1b[6~")
 	i.SendMessage("\x1b[6~")
-	i.SendMessage("\x0c")
-
 	i.viewState = ViewStateReadyViewing
+	i.SendRefresh()
 }
 
 func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 	if i.viewState != ViewStateReadyViewing {
+		log.Warn("Current view state is not ready viewing, skipping ", i.viewState.String())
+		time.Sleep(time.Second)
+		i.SendRefresh()
+		return
+	}
+	if len(e.Posts) == 0 {
+		log.Warn("No posts found, backing")
 		return
 	}
 
-	if len(e.Posts) == 0 {
-		i.viewState = ViewStateBacking
-		return
-	}
-	i.Lock()
-	i.viewState = ViewStateViewing
-	i.Unlock()
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
 
@@ -284,6 +299,7 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 	var posts []event.PostInfo
 
 	for _, post := range e.Posts {
+		fmt.Println(post.Title)
 		if !regex.MatchString(post.Title) {
 			continue
 		}
@@ -291,9 +307,10 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 	}
 
 	if len(posts) == 0 {
-		i.viewState = ViewStateBacking
+		log.Warn("No posts found, backing")
 		return
 	}
+
 	customView, _ := i.db.PostInfo.Query().Where(postinfo.ForceViewExpireGTE(time.Now())).First(ctx)
 	lastPost := lo.LastOrEmpty(posts)
 	var forceView bool
@@ -327,6 +344,7 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 	}
 
 	if lastPost.Title == "" {
+		log.Infof("No posts found, backing")
 		i.currentPost = nil
 		i.Lock()
 		i.viewState = ViewStateBacking
@@ -336,6 +354,10 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 			log.Errorf("error backing: %v", err)
 		}
 	}
+
+	i.Lock()
+	i.viewState = ViewStateViewing
+	i.Unlock()
 
 	postTitle := passingStringsToFmt(i.currentSearch.PostTitle, regex.FindStringSubmatch(lastPost.Title))
 	c.PrepareWait()
@@ -417,7 +439,10 @@ func (i *Instance) viewPost(c *core.EventClient, e *event.ListPostEvent) {
 		i.createThreadAndPinnedMessage(contentChunk)
 	} else {
 		i.currentPost = postInfo
-		i.createThreadAndPinnedMessage(contentChunk)
+
+		if len(postInfo.ContentMessages) == 0 {
+			i.createThreadAndPinnedMessage(contentChunk)
+		}
 	}
 
 	if forceView {
@@ -537,7 +562,7 @@ func (i *Instance) createThreadAndPinnedMessage(messages []string) {
 		post, err := i.discord.Rest().CreatePostInThreadChannel(i.currentSearch.ForumChannel, discord.ThreadChannelPostCreate{
 			Name: i.currentPost.Title,
 
-			Message: discord.NewMessageCreateBuilder().SetContentf("- %s間直播單\n文章AID: %s\n文章網址: %s", i.currentPost.Title, i.currentPost.Aid, i.currentPost.URL).Build(),
+			Message: discord.NewMessageCreateBuilder().SetContentf("- %s\n文章AID: %s\n文章網址: %s", i.currentPost.Title, i.currentPost.Aid, i.currentPost.URL).Build(),
 		})
 		if err != nil {
 			log.Warn(err)
@@ -795,19 +820,25 @@ func (i *Instance) DiscordHook() {
 	})
 	// 1140101-晚
 	r.SlashCommand("/fetch-title", func(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
-		title := data.String("title")
+		keyword := data.String("search")
+		title, ok := data.OptString("title-constraint")
+		keywords := strings.Split(keyword, " ")
 
-		post, err := i.db.PostInfo.Query().Where(postinfo.TitleEqualFold(title)).First(context.Background())
-		if err == nil {
-			err := post.Update().SetForceViewExpire(time.Now().Add(30 * time.Minute)).Exec(context.Background())
-			if err != nil {
-				log.Warn(err)
+		var post *ent.PostInfo
+		var err error
+		if ok {
+			post, err = i.db.PostInfo.Query().Where(postinfo.TitleEqualFold(title)).First(context.Background())
+			if err == nil {
+				err = post.Update().SetSearchKeywords(keywords).SetForceViewExpire(time.Now().Add(30 * time.Minute)).Exec(context.Background())
+				if err != nil {
+					log.Warn(err)
+				}
+				i.reFetchSignal <- true
+				return e.CreateMessage(discord.NewMessageCreateBuilder().SetContent("已強制執行指定標題任務").SetEphemeral(true).Build())
 			}
-			i.reFetchSignal <- true
-			return e.CreateMessage(discord.NewMessageCreateBuilder().SetContent("已強制執行指定標題任務").SetEphemeral(true).Build())
 		}
 
-		post, err = i.db.PostInfo.Create().SetTitle(title).SetForceViewExpire(time.Now().Add(30 * time.Minute)).Save(context.Background())
+		post, err = i.db.PostInfo.Create().SetTitle(title).SetSearchKeywords(keywords).SetForceViewExpire(time.Now().Add(30 * time.Minute)).Save(context.Background())
 		if err != nil {
 			log.Warn(err)
 		}
@@ -848,6 +879,7 @@ func (i *Instance) Start(ctx context.Context) error {
 	if err := i.discord.OpenGateway(ctx); err != nil {
 		return err
 	}
+	i.DiscordHook()
 
 	i.RegisterAccountHandler()
 
