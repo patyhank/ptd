@@ -13,7 +13,7 @@ var PostRegex = regexp.MustCompile("([> ])(\\d+) ([ ~+Mm -!]) ?(X?\\d+|[爆 ]) ?
 
 var CommentRegex = regexp.MustCompile("([→推噓])  ?(\\w+): ([\\s\\S]+?)(?: +?| {0})(?:\\S+\\n|(\\d+/\\d+ \\d+:\\d+))")
 
-var MainScreenRegex = regexp.MustCompile("\\[(\\d+/\\d+) (\\S+) (\\d+:\\d+)]\\s+(\\S+)?\\s+線上(\\d+)人, 我是(\\w+)\\s+\\[呼叫器](\\S+)")
+var MainScreenRegex = regexp.MustCompile("線上(\\d+)人, 我是(\\w+)\\s+\\[呼叫器](\\S+)")
 
 var PostInfoRegex = regexp.MustCompile("文章代碼\\(AID\\): #(\\w+) ([\\S\\s]+?)\\s+[│|][\\S\\s]+文章網址: (https://\\S+)[\\s\\S]+ 這一篇文章值 (\\d+) Ptt幣")
 

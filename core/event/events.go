@@ -41,9 +41,6 @@ func (p *BadLoginNotifyEvent) Matched(content string) bool {
 }
 
 type MainScreenEvent struct {
-	PTTDate     string
-	PTTTime     string
-	PTTHoliday  string
 	OnlineUsers int64
 	Username    string
 	CallerState string
@@ -56,12 +53,12 @@ func (p *MainScreenEvent) Matched(content string) bool {
 func (p *MainScreenEvent) FillGroup(content string) {
 	matches := MainScreenRegex.FindStringSubmatch(content)
 	if matches != nil {
-		p.PTTDate = matches[1]
-		p.PTTTime = matches[2]
-		p.PTTHoliday = matches[3]
-		p.OnlineUsers, _ = strconv.ParseInt(matches[4], 10, 64)
-		p.Username = matches[5]
-		p.CallerState = matches[6]
+		//p.PTTDate = matches[1]
+		//p.PTTTime = matches[2]
+		//p.PTTHoliday = matches[3]
+		p.OnlineUsers, _ = strconv.ParseInt(matches[1], 10, 64)
+		p.Username = matches[2]
+		p.CallerState = matches[3]
 	}
 }
 

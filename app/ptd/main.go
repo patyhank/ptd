@@ -6,6 +6,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/patyhank/ptd/app"
 	"github.com/patyhank/ptd/app/config"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 )
@@ -30,6 +31,13 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
+
+	logrus.SetOutput(os.Stderr)
+	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+		ForceColors:   true,
+	})
 
 	instance := app.NewInstance(cfg)
 
